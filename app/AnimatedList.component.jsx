@@ -8,28 +8,49 @@ function logData(data) {
         : `to: ${d.value.style.h.val}`}]`));
 }
 
-const START_STYLES = {
-    h: 0
-};
+const compareStyles = (a, b) => Object.keys(a).reduce((valid, key) => valid && a[key] === b[key], true);
 
-const END_STYLES = {
-    h: 18
+function goToElement(element) {
+    const style = {};
+    Object.keys(element).forEach(key => {
+        style[key] = spring(element[key]);
+    });
+    return style;
+}
+function staggerRemove(styles, start) {
+    const prevData = {};
+    styles.forEach(p => prevData[p.key] = p.style);
+    styles.reverse().forEach((config, i) => {
+        if (i === 0) {
+            config.style = {
+                ...start
+            };
+        } else if (prevData[styles[i - 1].key]) {
+            config.style = goToElement(prevData[styles[i - 1].key]);
+        }
+    });
+}
+function staggerAdd(styles, end) {
+    const prevData = {};
+    styles.forEach(p => prevData[p.key] = p.style);
+    styles.forEach((config, i) => {
+        if (i === 0) {
+            config.style = {};
+            Object.keys(end).forEach(key => {
+                config.style[key] = spring(end[key]);
+            });
+        } else if (prevData[styles[i - 1].key]) {
+            config.style = goToElement(prevData[styles[i - 1].key]);
+        }
+    });
 }
 
-const isEnterEnded = config => config.style.h === 18;
-const isLeaveEnded = config => config.style.h === 0;
-
-const shouldStartMountAnimation = removed => {
-    const maxHeightToRemove = Math.max(...removed.map(config => config.style.h));
-    return maxHeightToRemove < 2;
-}
-
-function getStyles(prev = [], currentList) {
+function getStyles(prev = [], currentList, {start, end, shouldStartMountAnimation}) {
     currentList = currentList.map(item => ({
         key: item,
         data: item,
         style: {
-            ...START_STYLES
+            ...start
         }
     }));
     const prevData = {};
@@ -37,46 +58,29 @@ function getStyles(prev = [], currentList) {
     const data = merge(currentList, prev, (a, b) => a.key === b.key);
     logData(data);
 
-    const added = getAddedOrStable(data).filter(c => !isEnterEnded(c));
+    const added = getAddedOrStable(data).filter(c => !compareStyles(c.style, end));
     const removed = getRemoved(data);
 
-    const willAdd = shouldStartMountAnimation(removed);
-    removed.reverse().forEach((config, i) => {
-        if (i === 0) {
-            config.style = {
-                ...START_STYLES
-            };
-        } else if (prevData[removed[i - 1].key]) {
-            const beforeElementStyle = prevData[removed[i - 1].key];
-            config.style = {};
-            Object.keys(beforeElementStyle).forEach(key => {
-                config.style[key] = spring(beforeElementStyle[key]);
-            });
-        }
-    });
+    const willAdd = removed.length === 0 || shouldStartMountAnimation(removed[0]);
+    staggerRemove(removed, start);
 
     if (willAdd) {
-        added.forEach((config, i) => {
-            if (i === 0) {
-                config.style = {};
-                Object.keys(END_STYLES).forEach(key => {
-                    config.style[key] = spring(END_STYLES[key]);
-                });
-            } else if (prevData[added[i - 1].key]) {
-                const beforeElementStyle = prevData[added[i - 1].key];
-                config.style = {};
-                Object.keys(beforeElementStyle).forEach(key => {
-                    config.style[key] = spring(beforeElementStyle[key]);
-                });
-            }
-        });
+        staggerAdd(added, end);
     }
 
-    return getRawData(data).filter(c => !isLeaveEnded(c));
+    return getRawData(data).filter(c => !compareStyles(c.style, start));
 }
 
 export default({list}) => (
-    <TransitionMotion willLeave={() => ({h: spring(0)})} willEnter={() => ({h: 0})} styles={prev => getStyles(prev, list)}>
+    <TransitionMotion willLeave={() => ({h: spring(0)})} willEnter={() => ({h: 0})} styles={prev => getStyles(prev, list, {
+        start: {
+            h: 0
+        },
+        end: {
+            h: 18
+        },
+        shouldStartMountAnimation: lastToRemove => lastToRemove.style.h < 2
+    })}>
         {interpolatedData => (
             <div>
                 {interpolatedData.map(config => (
