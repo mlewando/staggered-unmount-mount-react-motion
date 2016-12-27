@@ -1,50 +1,60 @@
 import React from 'react';
+import {uniqueId} from 'lodash';
 import List from './AnimatedList.component';
-let globalIndex = 0;
-const convertArray = (array, toRemove, toAdd) => {
-    array = [...array];
-    while (toRemove--) {
-        array.splice(Math.floor(Math.random() * (array.length - 1)), 1);
-    }
-
-    const finalSize = array.length + toAdd;
-    while (array.length < finalSize) {
-        const content = `Some ${globalIndex++} value`;
-        array.splice(Math.floor(Math.random() * array.length), 0, content);
-    }
-    return [...array];
-};
 
 class App extends React.Component {
+
     constructor(props) {
         super(props);
         this.state = {
             amountToRemove: 0,
             amountToAdd: 0,
-            items: []
+            items: ['Some 1 item', 'Some 2 item']
         };
+        this.index = 3;
+        this.addAmountId = uniqueId('add-amount');
+        this.removeAmountId = uniqueId('remove-amount');
     }
 
-    change(e) {
-        this.setState({
-            items: convertArray(this.state.items, this.state.amountToRemove, this.state.amountToAdd)
-        });
+    createArray(e) {
+        const items = [...this.state.items];
+        let {amountToRemove, amountToAdd} = this.state;
+        while (amountToRemove--) {
+            items.splice(Math.floor(Math.random() * (items.length - 1)), 1);
+        }
+
+        const finalSize = items.length + amountToAdd;
+        while (items.length < finalSize) {
+            const content = `Some ${this.index++} value`;
+
+            items.splice(Math.floor(Math.random() * items.length), 0, content);
+        }
+        this.setState({items});
     }
 
     render() {
         return (
             <div>
-                <input type='number' value={this.state.amountToRemove} onChange={e => this.setState({
-                    amountToRemove: parseInt(e.currentTarget.value)
-                })}/>
-                <input type='number' value={this.state.amountToAdd} onChange={e => this.setState({
-                    amountToAdd: parseInt(e.currentTarget.value)
-                })}/>
-                <button onClick={this.change.bind(this)}>go</button>
-                <List list={this.state.items}/>
+                <div>
+                    <label htmlFor={this.addAmountId} >Amount of items to add to list:</label>
+                    <input id={this.addAmountId} type='number' value={this.state.amountToAdd} onChange={e => this.setState({
+                        amountToAdd: parseInt(e.currentTarget.value)
+                    })}/>
+                </div>
+                <div>
+                    <label htmlFor={this.removeAmountId} >Amount of items to remove from list:</label>
+                    <input id={this.removeAmountId} type='number' value={this.state.amountToRemove} onChange={e => this.setState({
+                        amountToRemove: parseInt(e.currentTarget.value)
+                    })}/>
+                </div>
+                <button onClick={this.createArray.bind(this)}>Generate new list</button>
+                <div>
+                    <div>List:</div>
+                    <List list={this.state.items}/>
+                </div>
             </div>
-        );
+        )
     }
-};
+}
 
 export default App;
