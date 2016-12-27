@@ -1,8 +1,9 @@
 import {spring} from "react-motion";
 import merge, {getAddedOrStable, getRemoved, getRawData} from "./arraysMerge";
 
-const compareStyles = (a, b) => Object.keys(a)
-    .reduce((valid, key) => valid && a[key] === b[key], true);
+function compareStyles(a, b) {
+    return Object.keys(a).reduce((valid, key) => valid && a[key] === b[key], true);
+}
 
 function getProgress(styles, start, end) {
     const keys = Object.keys(styles);
