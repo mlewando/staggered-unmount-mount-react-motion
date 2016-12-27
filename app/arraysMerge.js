@@ -26,3 +26,7 @@ export default(a, b, compare = (a, b) => a === b) => {
     b.forEach(value => c.push({value, type: 'removed'}));
     return c;
 }
+
+export const getAddedOrStable = data => data.filter(d => d.type === 'stable' || d.type === 'added').map(d => d.value);
+export const getRemoved = data => data.filter(d => d.type === 'removed').map(d => d.value);
+export const getRawData = data => data.map(d => d.value);

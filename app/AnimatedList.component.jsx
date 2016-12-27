@@ -1,17 +1,12 @@
 import React from 'react';
 import {TransitionMotion, spring} from 'react-motion';
-import merge from './arraysMerge';
+import merge, {getAddedOrStable, getRemoved, getRawData} from './arraysMerge';
 
 function logData(data) {
-    console.log(data.map(d => `${d.type} - ${d.value.data} [${typeof d.value.style.h === 'number'
+    console.debug(data.map(d => `${d.type} - ${d.value.data} [${typeof d.value.style.h === 'number'
         ? d.value.style.h
         : `to: ${d.value.style.h.val}`}]`));
 }
-
-const getAdded = data => data.filter(d => d.type === 'added').map(d => d.value);
-const getStable = data => data.filter(d => d.type === 'stable').map(d => d.value);
-const getAddedOrStable = data => data.filter(d => d.type === 'stable' || d.type === 'added').map(d => d.value);
-const getRemoved = data => data.filter(d => d.type === 'removed').map(d => d.value);
 
 function getStyles(prev = [], currentList) {
     currentList = currentList.map(item => ({
@@ -56,7 +51,7 @@ function getStyles(prev = [], currentList) {
         });
     }
 
-    return data.map(d => d.value).filter(d => d.style.h !== 0);
+    return getRawData(data).filter(d => d.style.h !== 0);
 }
 
 export default({list}) => (
