@@ -21,34 +21,16 @@ function snapToElement(element) {
     });
     return style;
 }
-function staggerRemove(styles, start, end, force) {
-    const prevData = {};
-    styles.forEach(p => prevData[p.key] = p.style);
-    styles.reverse().forEach((config, i) => {
-        if (i === 0) {
-            config.style = {
-                ...start
-            };
-        } else if (prevData[styles[i - 1].key]) {
-            const prevStyles = prevData[styles[i - 1].key];
-            if (getProgress(prevStyles, start, end) < (100 - force)) {
-                config.style = snapToElement(prevStyles);
-            }
-        }
-    });
-}
-function staggerAdd(styles, start, end, force) {
+
+function stagger(styles, to, force, getProgress, snapToFirst) {
     const prevData = {};
     styles.forEach(p => prevData[p.key] = p.style);
     styles.forEach((config, i) => {
         if (i === 0) {
-            config.style = {};
-            Object.keys(end).forEach(key => {
-                config.style[key] = spring(end[key]);
-            });
+            config.style = snapToFirst ? snapToElement(to) : {...to};
         } else if (prevData[styles[i - 1].key]) {
             const prevStyles = prevData[styles[i - 1].key];
-            if (getProgress(prevStyles, start, end) > force) {
+            if (getProgress(prevStyles) > force) {
                 config.style = snapToElement(prevStyles);
             }
         }
@@ -69,15 +51,14 @@ function getStyles(prev = [], currentList, {start, end, force}) {
 
     const added = getAddedOrStable(data).filter(c => !compareStyles(c.style, end));
     const removed = getRemoved(data);
+    const getAddingProgress = style => getProgress(style, start, end);
+    const getRemovingProgress = style => getProgress(style, end, start);
+    const addingProgress = added.length === 0 ? 100 : getAddingProgress(added[0].style);
+    const removingProgress = removed.length === 0 ? 100 : getRemovingProgress(removed[0].style);
 
-    const lastRemoveProgress = removed.length === 0
-        ? 100
-        : 100 - getProgress(removed[0].style, start, end);
-        console.log('last remove progress:', lastRemoveProgress);
-    staggerRemove(removed, start, end, force);
-
-    if (lastRemoveProgress > force) {
-        staggerAdd(added, start, end, force);
+    stagger(removed.reverse(), start, force, getRemovingProgress, false);
+    if (removingProgress > force) {
+        stagger(added, end, force, getAddingProgress, true);
     }
 
     return getRawData(data).filter(c => !compareStyles(c.style, start));
