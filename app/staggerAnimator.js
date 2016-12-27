@@ -1,17 +1,7 @@
 import {spring} from "react-motion";
 import merge, {getAddedOrStable, getRemoved, getRawData} from "./arraysMerge";
 import {isEqual} from 'lodash';
-
-function getProgress(styles, start, end) {
-    const keys = Object.keys(styles);
-    const lenght = keys.length;
-    let sum = 0;
-    for (let i = 0; i < lenght; i++) {
-        const key = keys[i];
-        sum += (styles[key] - start[key]) * 100 / (end[key] - start[key]);
-    }
-    return sum / lenght;
-}
+import calculateProgress from './calculateProgress';
 
 function snapToElement(element) {
     const style = {};
@@ -36,20 +26,6 @@ function stagger({styles, to, force, getProgress, snapToFirst}) {
     });
 }
 
-function stylesToString(styles) {
-    return Object
-        .keys(styles)
-        .map(key => {
-            const value = styles[key];
-            if (typeof value === 'number') {
-                return `${key}: ${value}`;
-            } else {
-                return `${key} => ${value.val}`;
-            }
-        })
-        .join(',');
-}
-
 function getStyles(currentList, {start, end, force, startWithRemove = true}, prev = []) {
     currentList = currentList.map(item => ({
         key: item,
@@ -64,8 +40,8 @@ function getStyles(currentList, {start, end, force, startWithRemove = true}, pre
 
     const added = getAddedOrStable(data).filter(c => !isEqual(c.style, end));
     const removed = getRemoved(data).reverse();
-    const getAddingProgress = style => getProgress(style, start, end);
-    const getRemovingProgress = style => getProgress(style, end, start);
+    const getAddingProgress = style => calculateProgress(style, start, end);
+    const getRemovingProgress = style => calculateProgress(style, end, start);
     const addingProgress = added.length === 0 ? 100 : getAddingProgress(
                                                   added[added.length - 1].style);
     const removingProgress = removed.length === 0 ? 100 : getRemovingProgress(
