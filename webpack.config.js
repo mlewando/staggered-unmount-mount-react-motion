@@ -33,6 +33,7 @@ module.exports = {
       template: path.resolve(__dirname, 'index.html')
     })
   ],
+  devtool: 'source-map',
   devServer: {
     historyApiFallback: true,
     stats: 'minimal'
