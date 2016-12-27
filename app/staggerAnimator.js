@@ -1,13 +1,14 @@
-import {spring} from 'react-motion';
-import merge, {getAddedOrStable, getRemoved, getRawData} from './arraysMerge';
+import {spring} from "react-motion";
+import merge, {getAddedOrStable, getRemoved, getRawData} from "./arraysMerge";
 
-const compareStyles = (a, b) => Object.keys(a).reduce((valid, key) => valid && a[key] === b[key], true);
+const compareStyles = (a, b) => Object.keys(a)
+    .reduce((valid, key) => valid && a[key] === b[key], true);
 
 function getProgress(styles, start, end) {
     const keys = Object.keys(styles);
     const lenght = keys.length;
     let sum = 0;
-    for (var i = 0; i < lenght; i++) {
+    for (let i = 0; i < lenght; i++) {
         const key = keys[i];
         sum += (styles[key] - start[key]) * 100 / (end[key] - start[key]);
     }
@@ -37,7 +38,21 @@ function stagger({styles, to, force, getProgress, snapToFirst}) {
     });
 }
 
-function getStyles(prev = [], currentList, {start, end, force, startWithRemove = true}) {
+function stylesToString(styles) {
+    return Object
+        .keys(styles)
+        .map(key => {
+            const value = styles[key];
+            if (typeof value === 'number') {
+                return `${key}: ${value}`;
+            } else {
+                return `${key} => ${value.val}`;
+            }
+        })
+        .join(',');
+}
+
+function getStyles(currentList, {start, end, force, startWithRemove = true}, prev = []) {
     currentList = currentList.map(item => ({
         key: item,
         data: item,
@@ -53,17 +68,31 @@ function getStyles(prev = [], currentList, {start, end, force, startWithRemove =
     const removed = getRemoved(data).reverse();
     const getAddingProgress = style => getProgress(style, start, end);
     const getRemovingProgress = style => getProgress(style, end, start);
-    const addingProgress = added.length === 0 ? 100 : getAddingProgress(added[added.length - 1].style);
-    const removingProgress = removed.length === 0 ? 100 : getRemovingProgress(removed[removed.length - 1].style);
-    const removeAction = {styles: removed, to: start, force, getProgress: getRemovingProgress,  snapToFirst: false};
-    const addAction = {styles: added, to: end, force, getProgress: getAddingProgress, snapToFirst: true};
+    const addingProgress = added.length === 0 ? 100 : getAddingProgress(
+                                                  added[added.length - 1].style);
+    const removingProgress = removed.length === 0 ? 100 : getRemovingProgress(
+                                                      removed[removed.length - 1].style);
+    const removeAction = {
+        styles: removed,
+        to: start,
+        getProgress: getRemovingProgress,
+        snapToFirst: false,
+        force
+    };
+    const addAction = {
+        styles: added,
+        to: end,
+        getProgress: getAddingProgress,
+        snapToFirst: true,
+        force
+    };
 
-    let actions = [];
+    let actions;
     if (startWithRemove && removingProgress > force) {
         actions = [removeAction, addAction];
     } else if (startWithRemove) {
         actions = [removeAction];
-    } else if (!startWithRemove && addingProgress > force) {
+    } else if (addingProgress > force) {
         actions = [addAction, removeAction];
     } else {
         actions = [addAction];
@@ -73,5 +102,4 @@ function getStyles(prev = [], currentList, {start, end, force, startWithRemove =
 
     return getRawData(data).filter(c => !compareStyles(c.style, start));
 }
-
 export default getStyles;
