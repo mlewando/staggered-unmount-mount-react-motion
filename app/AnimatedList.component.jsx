@@ -37,7 +37,7 @@ function getStyles(prev = [], currentList) {
         }
     });
 
-    return data.map(d => d.value);
+    return [...getAdded(data), ...getStable(data)];
 }
 
 export default({list}) => (
