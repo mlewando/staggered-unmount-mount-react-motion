@@ -29,6 +29,7 @@ function getStyles(prev = [], currentList) {
     const added = getAddedOrStable(data).filter(c => c.style.h < 18);
     const removed = getRemoved(data);
 
+    let maxHeightToRemove = Math.max(...removed.map(config => config.style.h));
     removed.reverse().forEach((config, i) => {
         if (i === 0) {
             config.style = {
@@ -41,17 +42,19 @@ function getStyles(prev = [], currentList) {
         }
     });
 
-    added.forEach((config, i) => {
-        if (i === 0) {
-            config.style = {
-                h: spring(18)
-            };
-        } else if (prevData[added[i - 1].key]) {
-            config.style = {
-                h: spring(prevData[added[i - 1].key].h)
-            };
-        }
-    });
+    if (maxHeightToRemove < 1) {
+        added.forEach((config, i) => {
+            if (i === 0) {
+                config.style = {
+                    h: spring(18)
+                };
+            } else if (prevData[added[i - 1].key]) {
+                config.style = {
+                    h: spring(prevData[added[i - 1].key].h)
+                };
+            }
+        });
+    }
 
     return data.map(d => d.value).filter(d => d.style.h !== 0);
 }
