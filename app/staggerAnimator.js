@@ -22,7 +22,7 @@ function snapToElement(element) {
     return style;
 }
 
-function stagger(styles, to, force, getProgress, snapToFirst) {
+function stagger({styles, to, force, getProgress, snapToFirst}) {
     const prevData = {};
     styles.forEach(p => prevData[p.key] = p.style);
     styles.forEach((config, i) => {
@@ -37,7 +37,7 @@ function stagger(styles, to, force, getProgress, snapToFirst) {
     });
 }
 
-function getStyles(prev = [], currentList, {start, end, force}) {
+function getStyles(prev = [], currentList, {start, end, force, startWithRemove = true}) {
     currentList = currentList.map(item => ({
         key: item,
         data: item,
@@ -50,16 +50,26 @@ function getStyles(prev = [], currentList, {start, end, force}) {
     const data = merge(currentList, prev, (a, b) => a.key === b.key);
 
     const added = getAddedOrStable(data).filter(c => !compareStyles(c.style, end));
-    const removed = getRemoved(data);
+    const removed = getRemoved(data).reverse();
     const getAddingProgress = style => getProgress(style, start, end);
     const getRemovingProgress = style => getProgress(style, end, start);
-    const addingProgress = added.length === 0 ? 100 : getAddingProgress(added[0].style);
-    const removingProgress = removed.length === 0 ? 100 : getRemovingProgress(removed[0].style);
+    const addingProgress = added.length === 0 ? 100 : getAddingProgress(added[added.length - 1].style);
+    const removingProgress = removed.length === 0 ? 100 : getRemovingProgress(removed[removed.length - 1].style);
+    const removeAction = {styles: removed, to: start, force, getProgress: getRemovingProgress,  snapToFirst: false};
+    const addAction = {styles: added, to: end, force, getProgress: getAddingProgress, snapToFirst: true};
 
-    stagger(removed.reverse(), start, force, getRemovingProgress, false);
-    if (removingProgress > force) {
-        stagger(added, end, force, getAddingProgress, true);
+    let actions = [];
+    if (startWithRemove && removingProgress > force) {
+        actions = [removeAction, addAction];
+    } else if (startWithRemove) {
+        actions = [removeAction];
+    } else if (!startWithRemove && addingProgress > force) {
+        actions = [addAction, removeAction];
+    } else {
+        actions = [addAction];
     }
+
+    actions.forEach(stagger);
 
     return getRawData(data).filter(c => !compareStyles(c.style, start));
 }
