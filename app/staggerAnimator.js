@@ -1,9 +1,6 @@
 import {spring} from "react-motion";
 import merge, {getAddedOrStable, getRemoved, getRawData} from "./arraysMerge";
-
-function compareStyles(a, b) {
-    return Object.keys(a).reduce((valid, key) => valid && a[key] === b[key], true);
-}
+import {isEqual} from 'lodash';
 
 function getProgress(styles, start, end) {
     const keys = Object.keys(styles);
@@ -65,7 +62,7 @@ function getStyles(currentList, {start, end, force, startWithRemove = true}, pre
     prev.forEach(p => prevData[p.key] = p.style);
     const data = merge(currentList, prev, (a, b) => a.key === b.key);
 
-    const added = getAddedOrStable(data).filter(c => !compareStyles(c.style, end));
+    const added = getAddedOrStable(data).filter(c => !isEqual(c.style, end));
     const removed = getRemoved(data).reverse();
     const getAddingProgress = style => getProgress(style, start, end);
     const getRemovingProgress = style => getProgress(style, end, start);
@@ -101,6 +98,6 @@ function getStyles(currentList, {start, end, force, startWithRemove = true}, pre
 
     actions.forEach(stagger);
 
-    return getRawData(data).filter(c => !compareStyles(c.style, start));
+    return getRawData(data).filter(c => !isEqual(c.style, start));
 }
 export default getStyles;
