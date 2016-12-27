@@ -10,6 +10,8 @@ function logData(data) {
 
 const getAdded = data => data.filter(d => d.type === 'added').map(d => d.value);
 const getStable = data => data.filter(d => d.type === 'stable').map(d => d.value);
+const getAddedOrStable = data => data.filter(d => d.type === 'stable' || d.type === 'added').map(d => d.value);
+const getRemoved = data => data.filter(d => d.type === 'removed').map(d => d.value);
 
 function getStyles(prev = [], currentList) {
     currentList = currentList.map(item => ({
@@ -21,10 +23,24 @@ function getStyles(prev = [], currentList) {
     }));
     const prevData = {};
     prev.forEach(p => prevData[p.key] = p.style);
-    let data = merge(currentList, prev, (a, b) => a.key === b.key);
-
-    let added = [...getAdded(data), ...getStable(data)].filter(c => c.style.h < 18);
+    const data = merge(currentList, prev, (a, b) => a.key === b.key);
     logData(data);
+
+    const added = getAddedOrStable(data).filter(c => c.style.h < 18);
+    const removed = getRemoved(data);
+
+    removed.reverse().forEach((config, i) => {
+        if (i === 0) {
+            config.style = {
+                h: 0
+            };
+        } else if (prevData[removed[i - 1].key]) {
+            config.style = {
+                h: spring(prevData[removed[i - 1].key].h)
+            };
+        }
+    });
+
     added.forEach((config, i) => {
         if (i === 0) {
             config.style = {
@@ -37,7 +53,7 @@ function getStyles(prev = [], currentList) {
         }
     });
 
-    return [...getAdded(data), ...getStable(data)];
+    return data.map(d => d.value).filter(d => d.style.h !== 0);
 }
 
 export default({list}) => (
