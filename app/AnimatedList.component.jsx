@@ -8,12 +8,28 @@ function logData(data) {
         : `to: ${d.value.style.h.val}`}]`));
 }
 
+const START_STYLES = {
+    h: 0
+};
+
+const END_STYLES = {
+    h: 18
+}
+
+const isEnterEnded = config => config.style.h === 18;
+const isLeaveEnded = config => config.style.h === 0;
+
+const shouldStartMountAnimation = removed => {
+    const maxHeightToRemove = Math.max(...removed.map(config => config.style.h));
+    return maxHeightToRemove < 2;
+}
+
 function getStyles(prev = [], currentList) {
     currentList = currentList.map(item => ({
         key: item,
         data: item,
         style: {
-            h: 0
+            ...START_STYLES
         }
     }));
     const prevData = {};
@@ -21,37 +37,42 @@ function getStyles(prev = [], currentList) {
     const data = merge(currentList, prev, (a, b) => a.key === b.key);
     logData(data);
 
-    const added = getAddedOrStable(data).filter(c => c.style.h < 18);
+    const added = getAddedOrStable(data).filter(c => !isEnterEnded(c));
     const removed = getRemoved(data);
 
-    let maxHeightToRemove = Math.max(...removed.map(config => config.style.h));
+    const willAdd = shouldStartMountAnimation(removed);
     removed.reverse().forEach((config, i) => {
         if (i === 0) {
             config.style = {
-                h: 0
+                ...START_STYLES
             };
         } else if (prevData[removed[i - 1].key]) {
-            config.style = {
-                h: spring(prevData[removed[i - 1].key].h)
-            };
+            const beforeElementStyle = prevData[removed[i - 1].key];
+            config.style = {};
+            Object.keys(beforeElementStyle).forEach(key => {
+                config.style[key] = spring(beforeElementStyle[key]);
+            });
         }
     });
 
-    if (maxHeightToRemove < 1) {
+    if (willAdd) {
         added.forEach((config, i) => {
             if (i === 0) {
-                config.style = {
-                    h: spring(18)
-                };
+                config.style = {};
+                Object.keys(END_STYLES).forEach(key => {
+                    config.style[key] = spring(END_STYLES[key]);
+                });
             } else if (prevData[added[i - 1].key]) {
-                config.style = {
-                    h: spring(prevData[added[i - 1].key].h)
-                };
+                const beforeElementStyle = prevData[added[i - 1].key];
+                config.style = {};
+                Object.keys(beforeElementStyle).forEach(key => {
+                    config.style[key] = spring(beforeElementStyle[key]);
+                });
             }
         });
     }
 
-    return getRawData(data).filter(d => d.style.h !== 0);
+    return getRawData(data).filter(c => !isLeaveEnded(c));
 }
 
 export default({list}) => (
