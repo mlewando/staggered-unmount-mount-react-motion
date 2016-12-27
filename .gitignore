@@ -1,0 +1,12 @@
+dist/
+*.log
+npm-debug.log*
+logs
+test-reports/
+.nyc-output
+build/Release
+node_modules
+.npm
+.idea/
+.idea_modules/
+
