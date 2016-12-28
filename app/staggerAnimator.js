@@ -1,26 +1,19 @@
 import {spring} from "react-motion";
 import merge, {getAddedOrStable, getRemoved, getRawData} from "./arraysMerge";
-import {isEqual} from 'lodash';
-import calculateProgress from './calculateProgress';
-
-function snapToElement(element) {
-    const style = {};
-    Object.keys(element).forEach(key => {
-        style[key] = spring(element[key]);
-    });
-    return style;
-}
+import {isEqual} from "lodash";
+import calculateProgress from "./calculateProgress";
+import convertObject from "./convertObject";
 
 function stagger({styles, to, force, getProgress, snapToFirst}) {
     const prevData = {};
     styles.forEach(p => prevData[p.key] = p.style);
     styles.forEach((config, i) => {
         if (i === 0) {
-            config.style = snapToFirst ? snapToElement(to) : {...to};
+            config.style = snapToFirst ? convertObject(to, spring) : {...to};
         } else if (prevData[styles[i - 1].key]) {
             const prevStyles = prevData[styles[i - 1].key];
             if (getProgress(prevStyles) > force) {
-                config.style = snapToElement(prevStyles);
+                config.style = convertObject(prevStyles, spring);
             }
         }
     });
