@@ -19,9 +19,9 @@ function stagger({styles, to, force, getProgress, snapToFirst}) {
     });
 }
 
-function getStyles(currentList, {start, end, force, startWithRemove = true}, prev = []) {
+function getStyles(currentList, {start, end, force, startWithRemove = true, getKey = item => item}, prev = []) {
     currentList = currentList.map(item => ({
-        key: item,
+        key: getKey(item),
         data: item,
         style: {
             ...start

@@ -2,7 +2,7 @@ import React from "react";
 import {TransitionMotion, spring} from "react-motion";
 import getStyles from "./staggerAnimator";
 
-export default({list}) => (
+export default ({list, getKey, render = item => item}) => (
     <TransitionMotion willLeave={() => ({h: spring(0), w: spring(0)})}
                       willEnter={() => ({h: 0, w: 0})}
                       styles={prev => getStyles(
@@ -12,9 +12,10 @@ export default({list}) => (
                                   h: 0, w: 2
                               },
                               end: {
-                                  h: 18, w: 100
+                                  h: 20, w: 100
                               },
-                              force: 60
+                              force: 60,
+                              getKey
                           },
                           prev)}>
         {interpolatedData => (
@@ -27,7 +28,7 @@ export default({list}) => (
                              overflow: 'hidden',
                              whiteSpace: 'nowrap'
                          }}>
-                        {config.data}
+                        {render(config.data)}
                     </div>
                 ))}
             </div>

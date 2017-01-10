@@ -36,13 +36,13 @@ class App extends React.Component {
         return (
             <div>
                 <div>
-                    <label htmlFor={this.addAmountId} >Amount of items to add to list:</label>
+                    <label htmlFor={this.addAmountId}>Amount of items to add to list:</label>
                     <input id={this.addAmountId} type='number' value={this.state.amountToAdd} onChange={e => this.setState({
                         amountToAdd: parseInt(e.currentTarget.value)
                     })}/>
                 </div>
                 <div>
-                    <label htmlFor={this.removeAmountId} >Amount of items to remove from list:</label>
+                    <label htmlFor={this.removeAmountId}>Amount of items to remove from list:</label>
                     <input id={this.removeAmountId} type='number' value={this.state.amountToRemove} onChange={e => this.setState({
                         amountToRemove: parseInt(e.currentTarget.value)
                     })}/>
@@ -50,7 +50,12 @@ class App extends React.Component {
                 <button onClick={this.createArray.bind(this)}>Generate new list</button>
                 <div>
                     <div>List:</div>
-                    <List list={this.state.items}/>
+                    <List list={this.state.items.map(item => ({
+                                    key: item,
+                                    element: <div style={{border: '1px solid red'}}>{item}</div>
+                          }))}
+                          getKey={data => data.key}
+                          render={data => data.element} />
                 </div>
             </div>
         )
