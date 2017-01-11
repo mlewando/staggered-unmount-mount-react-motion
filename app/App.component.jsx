@@ -1,6 +1,6 @@
 import React from 'react';
 import {uniqueId} from 'lodash';
-import List from './AnimatedList.component';
+import List from './ListChildren';
 
 class App extends React.Component {
 
@@ -50,12 +50,13 @@ class App extends React.Component {
                 <button onClick={this.createArray.bind(this)}>Generate new list</button>
                 <div>
                     <div>List:</div>
-                    <List list={this.state.items.map(item => ({
-                                    key: item,
-                                    element: <div style={{border: '1px solid red'}}>{item}</div>
-                          }))}
-                          getKey={data => data.key}
-                          render={data => data.element} />
+                    <List>
+                        {this.state.items.map(item =>
+                            <div key={item + '-key'} style={{border: '1px solid red'}}>
+                                {item}
+                            </div>
+                        )}
+                    </List>
                 </div>
             </div>
         )
